@@ -2,10 +2,8 @@
 Library file for wire shapes for Biot-Savart solver.
 """
 
-from sympy import pi
 import sympy as sp
-from numpy import sqrt, cos, sin, arccos, arctan2, arange, linspace, zeros, array, concatenate, append, around
-import numpy as np
+from numpy import sqrt, cos, sin, arccos, arctan2, arange, linspace, zeros, array, concatenate, append, around, cross, matmul, dot, pi
 
 # Credit to <https://stackoverflow.com/questions/18646477/why-is-sin180-not-zero-when-using-python-and-numpy>
 def scos(x): return sp.N(sp.cos(x))
@@ -76,23 +74,70 @@ class Wire:
 
         origin = array([origin_x, origin_y, origin_z])
 
-        # Convert to spherical polar coordinates and rotate
-        origin_sp = self.__cartesian_to_polar(origin)
-
-        # Rotate by theta and phi and convert back to cartesian coordinates
-        origin_sp[1] += theta
-        origin_sp[2] += phi
-        origin = self.__polar_to_cartesian(origin_sp)
-
         self.add_wire_element(pi/2, pi/2, length, origin)
         self.add_wire_element(pi, pi/2, length)
         self.add_wire_element(3*pi/2, pi/2, length)
         self.add_wire_element(0, pi/2, length)
 
-        # self.add_wire_element(pi/2 + theta, pi/2 - phi, length, origin)
-        # self.add_wire_element(pi + theta, pi/2 - phi, length)
-        # self.add_wire_element(3*pi/2 + theta, pi/2 - phi, length)
-        # self.add_wire_element(0 + theta, pi/2 - phi, length)
+        # Rotate generated square according to orientation
+        for i in range(len(self.coordinates[0])):
+            point = array([self.coordinates[0][i], self.coordinates[1][i], self.coordinates[2][i]])
+            new_point = self.__rotate_square(point, orientation)
+            self.coordinates[0][i] = new_point[0]; self.coordinates[1][i] = new_point[1]; self.coordinates[2][i] = new_point[2]
+
+    def __magnitude(self, vec):
+        """
+        Returns the magnitude of a vector
+        """
+        return sqrt(vec.dot(vec))
+
+    def __rotate_square(self, point, orientation):
+        """
+        Rotate generated square according to orientation (theta, phi)
+        """
+
+        # Unpack orientation
+        theta, phi = orientation[0], orientation[1]
+
+        # Override: if phi is set to 0, rotation will error out, so set phi to pi and do two rotations
+        if phi == 0: 
+            phi = pi
+            reflip = True
+        else:
+            reflip = False
+
+        # Unit vector of an x-y plane
+        v = array([0,0,1])
+
+        # Create a unit vector of magnitude 1 to rotate towards
+        r = 1
+        op = array([r*cos(theta)*sin(phi), r*sin(theta)*sin(phi), r*cos(phi)])
+
+        # Generate unit vector of axis of rotation, u
+        n = cross(v, op)
+        u = n/self.__magnitude(n)
+
+        # Calculate angle between the two vectors, alpha, and pre-calculate cos(alpha) and sin(alpha)
+        alpha = arccos(dot(v, op)/(self.__magnitude(v) * self.__magnitude(op)))
+        a_cos = cos(alpha); a_sin = sin(alpha)
+
+        # Extract components of u
+        u_x = u[0]; u_y = u[1]; u_z = u[2]
+
+        # Generate rotation matrix in cartesian coordinates, r
+        r = array([
+            [a_cos+u_x**2*(1-a_cos), u_x*u_y*(1-a_cos)-u_z*a_sin, u_x*u_z*(1-a_cos)+u_y*a_sin],
+            [u_y*u_x*(1-a_cos)+u_z*a_sin, a_cos+u_y**2*(1-a_cos), u_y*u_z*(1-a_cos)-u_x*a_sin],
+            [u_z*u_x*(1-a_cos)-u_y*a_sin, u_z*u_y*(1-a_cos)+u_x*a_sin, a_cos+u_z**2*(1-a_cos)]])
+
+        new_point = matmul(r, point)
+
+        # If phi was overriden, perform another rotation to flip the point back again
+        if reflip == True:
+            return self.__rotate_square(new_point, array([0, pi]))
+
+        return new_point
+
 
 
 

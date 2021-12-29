@@ -138,10 +138,6 @@ class Wire:
 
         return new_point
 
-
-
-
-
     def add_wire_element(self, theta, phi, length, origin = None):
         """
         Add a straight wire element from origin, of length length
@@ -198,34 +194,6 @@ class Wire:
         z = array([origin[2], vertex[2]])
 
         return [x, y, z]
-
-    def __cartesian_to_polar(self, point):
-        """
-        Convert point in cartesian coordinates to spherical polar.
-        Requires: point of coordinates (x, y, z)
-        """
-        # Unpack cartesian coordinates
-        x, y, z = point[0], point[1], point[2]
-
-        r = sqrt(x**2 + y**2 + z**2)
-        theta = arctan2_r(y, x)
-        phi = arccos_r(z/r)
-
-        return array([r, theta, phi])
-
-    def __polar_to_cartesian(self, point):
-        """
-        Convert point in spherical polar coordinates to cartesian.
-        Requires: point of coordinates (r, theta, phi)
-        """
-        # Unpack spherical polar coordinates
-        r, theta, phi = point[0], point[1], point[2]
-
-        x = r * scos(theta) * ssin(phi)
-        y = r * ssin(theta) * ssin(phi)
-        z = r * scos(phi)
-
-        return array([x, y, z])
 
     def plotme(self, ax=None):
         '''Plots itself. Optional axis argument, otherwise new axes are created

@@ -2,27 +2,21 @@
 Library file for wire shapes for Biot-Savart solver.
 """
 
-import sympy as sp
-from numpy import sqrt, cos, sin, arccos, arctan2, arange, linspace, zeros, array, concatenate, append, around, cross, matmul, dot, pi
+from numpy import sqrt, cos, sin, arccos, linspace, zeros, array,\
+    concatenate, append, cross, matmul, dot, pi
 
-# Credit to <https://stackoverflow.com/questions/18646477/why-is-sin180-not-zero-when-using-python-and-numpy>
-def scos(x): return sp.N(sp.cos(x))
-def ssin(x): return sp.N(sp.sin(x))
-
-def arctan2_r(y, x): return around(arctan2(y, x), decimals=5)
-def arccos_r(x): return around(arccos(x), decimals=5)
 
 class Wire:
     """
     Implements a Wire of arbitrary shape and dimensions.
-    
-    By default, the Wire has no coordinates, a current of 1A with 0 phase, 
+
+    By default, the Wire has no coordinates, a current of 1A with 0 phase,
     and number of turns `n` = 1.
 
     Creating a loop of wire, for example, can then be done by calling the
     circular_loop() method.
     """
-    # Create a `null wire` by default, 
+    # Create a `null wire` by default,
     def __init__(self):
         self.current = complex(1, 0)
         self.coordinates = []
@@ -33,7 +27,7 @@ class Wire:
         Set current of wire to be modulus amperes and with a phase theta
         """
         self.current = complex(modulus, theta)
-    
+
     def _gen_r_matrix(self, orientation):
         """
         Generates the rotation matrix for a given combination of theta and phi.
@@ -42,28 +36,33 @@ class Wire:
         theta, phi = orientation[0], orientation[1]
 
         # Unit vector of an x-y plane
-        v = array([0,0,1])
+        v = array([0, 0, 1])
 
         # Create a unit vector of magnitude 1 to rotate towards
         r = 1
-        op = array([r*cos(theta)*sin(phi), r*sin(theta)*sin(phi), r*cos(phi)])
+        v_p = array([r*cos(theta)*sin(phi), r*sin(theta)*sin(phi), r*cos(phi)])
 
         # Generate unit vector of axis of rotation, u
-        n = cross(v, op)
+        n = cross(v, v_p)
         u = n/self._magnitude(n)
 
-        # Calculate angle between the two vectors, alpha, and pre-calculate cos(alpha) and sin(alpha)
-        alpha = arccos(dot(v, op)/(self._magnitude(v) * self._magnitude(op)))
-        a_cos = cos(alpha); a_sin = sin(alpha)
+        # Calculate angle between the two vectors, alpha, and pre-calculate
+        # cos(alpha) and sin(alpha)
+        alpha = arccos(dot(v, v_p)/(self._magnitude(v) * self._magnitude(v_p)))
+        a_cos = cos(alpha)
+        a_sin = sin(alpha)
 
         # Extract components of u
-        u_x = u[0]; u_y = u[1]; u_z = u[2]
+        u_x = u[0]
+        u_y = u[1]
+        u_z = u[2]
 
-        # Generate rotation matrix in cartesian coordinates, r
+        # Generate rotation matrix, r, in cartesian coordinates
         r = array([
             [a_cos+u_x**2*(1-a_cos), u_x*u_y*(1-a_cos)-u_z*a_sin, u_x*u_z*(1-a_cos)+u_y*a_sin],
             [u_y*u_x*(1-a_cos)+u_z*a_sin, a_cos+u_y**2*(1-a_cos), u_y*u_z*(1-a_cos)-u_x*a_sin],
-            [u_z*u_x*(1-a_cos)-u_y*a_sin, u_z*u_y*(1-a_cos)+u_x*a_sin, a_cos+u_z**2*(1-a_cos)]])
+            [u_z*u_x*(1-a_cos)-u_y*a_sin, u_z*u_y*(1-a_cos)+u_x*a_sin, a_cos+u_z**2*(1-a_cos)]
+            ])
 
         return r
 
@@ -85,12 +84,12 @@ class Wire:
         # Generate empty variable for rotation matrix(/matrices)
         r_matrix = []
 
-        # Failsafe: generating a rotation matrix for phi = 0 will create NaNs because it takes the cross product of two parallel vectors.
-        # Instead, if phi == 0 do two rotations.
+        # Failsafe: generating a rotation matrix for phi = 0 will create NaNs because it takes the cross product of
+        # two parallel vectors. Instead, if phi == 0 do two rotations.
         if phi != 0:
             # Do one rotation as expected
             r_matrix.append(self._gen_r_matrix(orientation))
-        else: 
+        else:
             # Do two rotations, each of phi = pi so that the net change in phi is 0.
             r_matrix.append(self._gen_r_matrix(array([theta, pi])))
             r_matrix.append(self._gen_r_matrix(array([0, pi])))
@@ -105,11 +104,11 @@ class Wire:
                 point = matmul(r, point)
 
             # Save the new reoriented point
-            self.coordinates[0][i] = point[0] 
-            self.coordinates[1][i] = point[1] 
+            self.coordinates[0][i] = point[0]
+            self.coordinates[1][i] = point[1]
             self.coordinates[2][i] = point[2]
 
-    def circular_loop(self, centre, radius, n_p, n, orientation = array([0, 0])):
+    def circular_loop(self, centre, radius, n_p, n=1, orientation=array([0, 0])):
         """
         Create a circular loop of wire with:
             centre of loop `centre` (x, y, z)
@@ -139,7 +138,7 @@ class Wire:
         # Now reorient the wire according to `orientation`
         self._reorient_loop(orientation)
 
-    def square_loop(self, centre, length, n, orientation = array([0, 0])):
+    def square_loop(self, centre, length, n=1, orientation=array([0, 0])):
         """
         Create a square loop of wire with:
             centre of square loop `centre` (x, y, z)
@@ -168,27 +167,32 @@ class Wire:
         # Reorient the loop according to orientation
         self._reorient_loop(orientation)
 
-    def add_wire_element(self, theta, phi, length, origin = None):
+    def add_wire_element(self, theta, phi, length, origin=None):
         """
         Add a straight wire element from origin, of length length
             and azimuth theta and inclination phi
         """
 
         # If no origin supplied, either get the most recent vertex or start from (0, 0, 0)
+        # If origin supplied, add the origin to self.coordinates
         match origin:
             case None if len(self.coordinates) == 0:
                 origin = array([0, 0, 0])
+                add_origin = False
             case None if len(self.coordinates) != 0:
                 origin = array(self.coordinates)[:, -1]
+                add_origin = False
+            case _:
+                add_origin = True
 
         # Create new wire element from the origin
-        new_wire = self._create_wire(origin, theta, phi, length)
+        new_wire = self._create_wire(origin, theta, phi, length, add_origin)
 
         if len(self.coordinates) == 0:
             self.coordinates = new_wire
             return
 
-        match origin: 
+        match origin:
             case None:
                 x = append(self.coordinates[0], new_wire[0][1])
                 y = append(self.coordinates[1], new_wire[1][1])
@@ -200,7 +204,7 @@ class Wire:
 
         self.coordinates = [x, y, z]
 
-    def _create_wire(self, origin, theta, phi, length):
+    def _create_wire(self, origin, theta, phi, length, add_origin):
         '''
         Create_Wire(self,origin,theta,phi,length)
         creates a single wire length long, starting from point
@@ -209,18 +213,25 @@ class Wire:
         '''
 
         # Computes the unit vector
-        ux = scos(theta) * ssin(phi)
-        uy = ssin(theta) * ssin(phi)
-        uz = scos(phi)
+        ux = cos(theta) * sin(phi)
+        uy = sin(theta) * sin(phi)
+        uz = cos(phi)
 
         u = array([ux, uy, uz])
 
         # Computes the second vertex
         vertex = origin + length * u
 
-        x = array([origin[0], vertex[0]])
-        y = array([origin[1], vertex[1]])
-        z = array([origin[2], vertex[2]])
+        # Manually add the origin if it has been explicitly specified
+        match add_origin:
+            case True:
+                x = array([origin[0], vertex[0]])
+                y = array([origin[1], vertex[1]])
+                z = array([origin[2], vertex[2]])
+            case False:
+                x = array([vertex[0]])
+                y = array([vertex[1]])
+                z = array([vertex[2]])
 
         return [x, y, z]
 
@@ -248,8 +259,3 @@ class Wire:
         p.draw()
 
         return ax1
-
-
-
-
-

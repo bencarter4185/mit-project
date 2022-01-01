@@ -1,10 +1,6 @@
-from pathlib import Path
-print('Running' if __name__ == '__main__' else 'Importing', Path(__file__).resolve())
-
 # Internal module imports
-from modules.discretizer import discretize
-# from mit-project.modules.discretizer import discretize
-from modules.wires import Wire
+from modules.bs_discretizer import discretize
+from modules.bs_wires import Wire
 # External module imports
 from numpy import array, pi
 
@@ -17,6 +13,6 @@ some_loop.set_current(2, 0)
 ax = some_loop.plotme()
 
 # Test the discretisation of the wire
-d_segment = discretize(some_loop, 0.001, 0)
+d_segment = discretize(some_loop, 0.01, 1)
 
 print(d_segment)

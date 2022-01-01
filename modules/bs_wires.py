@@ -28,6 +28,12 @@ class Wire:
         """
         self.current = complex(modulus, theta)
 
+    def set_loops(self, n):
+        """
+        Set number of loops in wire (coil) to be integer value n
+        """
+        self.n = int(n)
+
     def _gen_r_matrix(self, orientation):
         """
         Generates the rotation matrix for a given combination of theta and phi.

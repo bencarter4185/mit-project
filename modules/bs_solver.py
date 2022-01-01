@@ -5,6 +5,7 @@ Library file to solve the Biot-Savart law.
 from scipy.constants import mu_0 as mu
 from numpy import array, zeros, complex_, sqrt, pi, cross
 from itertools import pairwise
+from bs_discretizer import discretize
 
 
 def _magnitude(vec):
@@ -13,9 +14,10 @@ def _magnitude(vec):
     """
     return sqrt(vec.dot(vec))
 
+
 def _solve_segment(segment, point, current):
     """
-    Calculate the magnetic field for a small current element, at a given point. 
+    Calculate the magnetic field for a small current element, at a given point.
     """
     # Generate an empty variable for the magnetic field
     db = zeros(3)
@@ -47,7 +49,37 @@ def _solve_segment(segment, point, current):
     return db
 
 
-def solve(wire, points):
+def solve_no_chunk(wire, points):
+    """
+    Calculate the resultant magnetic field due to an arbitrary wire object, with no chunking.
+    """
+
+    # Store an `effective current`, which is the current in the wire where the real part is multiplied
+    # by the number of turns, n
+    current = complex(wire.current.real * wire.n, wire.current.imag)
+
+    # Generate an empty variable for the magnetic field
+    b = zeros((len(points[0]), 3), dtype=complex_)
+
+    # Iterate through every segment of wire
+    for ((x2, x1),
+         (y2, y1),
+         (z2, z1)) in zip(pairwise(wire.coordinates[0]),
+                          pairwise(wire.coordinates[1]),
+                          pairwise(wire.coordinates[2])):
+        # Generate coordinates of resultant line segment
+        segment = array([array([x1, x2]), array([y1, y2]), array([z1, z2])])
+
+        # Iterate through every point in question and solve
+        for j in range(len(points[0])):
+            # Generate coordinates of point
+            point = array([points[0][j], points[1][j], points[2][j]])
+            b[j] += _solve_segment(segment, point, current)
+
+    return b
+
+
+def solve(wire, points, dl):
     """
     Calculate the resultant magnetic field due to an arbitrary wire object, for a given set of points.
     """
@@ -67,14 +99,24 @@ def solve(wire, points):
                           pairwise(wire.coordinates[2])):
         # Generate coordinates of resultant line segment
         segment = array([array([x1, x2]), array([y1, y2]), array([z1, z2])])
-        
-        # Iterate through every point in question and solve
-        for i in range(len(points[0])):
-            # Generate coordinates of point
-            point = array([points[0][i], points[1][i], points[2][i]])
-            b[i] += _solve_segment(segment, point, current)
+
+        # Discretize the segment into chunks
+        segments = discretize(wire, segment, dl)
+
+        for ((dx2, dx1),
+             (dy2, dy1),
+             (dz2, dz1)) in zip(pairwise(segments[0]),
+                                pairwise(segments[1]),
+                                pairwise(segments[2])):
+            segment_chunk = array([array([dx1, dx2]), array([dy1, dy2]), array([dz1, dz2])])
+            # Iterate through every point in question and solve
+            for j in range(len(points[0])):
+                # Generate coordinates of point
+                point = array([points[0][j], points[1][j], points[2][j]])
+                b[j] += _solve_segment(segment_chunk, point, current)
 
     return b
+
 
 def b_abs(b):
     """

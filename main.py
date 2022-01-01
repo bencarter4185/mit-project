@@ -4,8 +4,8 @@ Writing a biot-savart solver from scratch
 
 import matplotlib.pyplot as plt
 from numpy import array, pi, zeros, linspace
-import modules.wires as wires
-import modules.solver as solver
+import modules.bs_wires as bs_wires
+import modules.bs_solver as bs_solver
 
 
 def main():
@@ -14,10 +14,11 @@ def main():
     Testing code to create an orientable square loop
     """
 
-    # Square loop with current 2A, 0 phase
-    some_loop = wires.Wire()
+    # Square loop with current 2A, 0 phase, 20 loops
+    some_loop = bs_wires.Wire()
     some_loop.square_loop(centre=array([0, 0, 0]), length=2, orientation=array([0*pi, 0]))
     some_loop.set_current(2, 0)
+    some_loop.set_loops(20)
 
     zs = linspace(1, 10, 1000)
     xs = zeros(len(zs))
@@ -25,10 +26,14 @@ def main():
 
     points = array([xs, ys, zs])
 
-    b = solver.solve(some_loop, points)
-    b_mag = solver.b_abs(b)
+    b = bs_solver.solve(some_loop, points, 0.01)
+    b_mag = bs_solver.b_abs(b)
+
+    b_no_chunk = bs_solver.solve_no_chunk(some_loop, points)
+    b_mag_no_chunk = bs_solver.b_abs(b_no_chunk)
 
     plt.plot(zs, b_mag)
+    plt.plot(zs, b_mag_no_chunk)
     plt.show()
 
     # # Square loop

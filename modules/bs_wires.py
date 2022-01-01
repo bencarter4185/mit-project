@@ -22,11 +22,11 @@ class Wire:
         self.coordinates = []
         self.n = 1
 
-    def set_current(self, modulus, theta):
+    def set_current(self, current):
         """
         Set current of wire to be modulus amperes and with a phase theta
         """
-        self.current = complex(modulus, theta)
+        self.current = current
 
     def set_loops(self, n):
         """
@@ -114,7 +114,7 @@ class Wire:
             self.coordinates[1][i] = point[1]
             self.coordinates[2][i] = point[2]
 
-    def circular_loop(self, centre, radius, n_p, n=1, orientation=array([0, 0])):
+    def circular_loop(self, centre, radius, n_p, n=1, orientation=array([0, 0]), current=complex(1, 0)):
         """
         Create a circular loop of wire with:
             centre of loop `centre` (x, y, z)
@@ -128,6 +128,9 @@ class Wire:
         be of orientation (theta, phi) = (0, 0), i.e. (0, 0, 1) in Cartesian coordinates.
         A loop in an x-z plane would have orientation (theta, phi) = (0, pi/2).
         """
+
+        # Set complex current in loop
+        self.current = current
 
         # Set number of turns of current loop
         self.n = n
@@ -144,7 +147,7 @@ class Wire:
         # Now reorient the wire according to `orientation`
         self._reorient_loop(orientation)
 
-    def square_loop(self, centre, length, n=1, orientation=array([0, 0])):
+    def square_loop(self, centre, length, n=1, orientation=array([0, 0]), current=complex(1, 0)):
         """
         Create a square loop of wire with:
             centre of square loop `centre` (x, y, z)
@@ -157,6 +160,9 @@ class Wire:
         be of orientation (theta, phi) = (0, 0), i.e. (0, 0, 1) in Cartesian coordinates.
         A loop in an x-z plane would have orientation (theta, phi) = (0, pi/2).
         """
+
+        # Set complex current in loop
+        self.current = current
 
         # Set number of turns of current loop
         self.n = n

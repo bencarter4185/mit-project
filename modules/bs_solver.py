@@ -49,7 +49,7 @@ def _solve_segment(segment, point, current):
     return db
 
 
-def solve_no_chunk(wire, points):
+def _solve_without_discretization(wire, points):
     """
     Calculate the resultant magnetic field due to an arbitrary wire object, with no chunking.
     """
@@ -79,7 +79,7 @@ def solve_no_chunk(wire, points):
     return b
 
 
-def solve(wire, points, dl):
+def _solve_with_discretization(wire, points, dl):
     """
     Calculate the resultant magnetic field due to an arbitrary wire object, for a given set of points.
     """
@@ -114,6 +114,21 @@ def solve(wire, points, dl):
                 # Generate coordinates of point
                 point = array([points[0][j], points[1][j], points[2][j]])
                 b[j] += _solve_segment(segment_chunk, point, current)
+
+    return b
+
+
+def solve(wire, points, dl=None):
+    """
+    Calculate the resultant magnetic field due to an arbitrary wire object, for a given set of points.
+
+    Assume that if `dl` isn't supplied, no discretization is required.
+    """
+    match dl:
+        case None:
+            b = _solve_without_discretization(wire, points)
+        case _:
+            b = _solve_with_discretization(wire, points, dl)
 
     return b
 

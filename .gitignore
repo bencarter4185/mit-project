@@ -131,3 +131,5 @@ dmypy.json
 # Ignore test.py
 test.py
 .vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json

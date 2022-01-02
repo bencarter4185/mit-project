@@ -1,0 +1,41 @@
+{
+    "coils": [
+        {
+        "name": "coil1",
+        "shape": "circle",
+        "centre": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        },
+        "radius": 2,
+        "number of points": 100,
+        "number of loops": 1,
+        "orientation": {
+            "theta": 0,
+            "phi": 0,
+            "angle unit": "degrees"
+        },
+        "current": {
+            "modulus": 1,
+            "phase": 0,
+            "angle unit": "degrees"
+        }
+    }],
+    "actions": {
+        "calculate magnetic field": {
+            "along": "line",
+            "start point" : {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            },
+            "end point": {
+                "x": 0,
+                "y": 0,
+                "z": 10
+            },
+            "number of points": 1000
+        }
+    }
+}

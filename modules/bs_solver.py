@@ -79,7 +79,7 @@ def _solve_without_discretization(wire, points):
     return b
 
 
-def _solve_with_discretization(wire, points, dl):
+def _solve_with_discretization(wire, points):
     """
     Calculate the resultant magnetic field due to an arbitrary wire object, for a given set of points.
     """
@@ -101,7 +101,7 @@ def _solve_with_discretization(wire, points, dl):
         segment = array([array([x1, x2]), array([y1, y2]), array([z1, z2])])
 
         # Discretize the segment into chunks
-        segments = discretize(wire, segment, dl)
+        segments = discretize(wire, segment, wire.dl)
 
         for ((dx2, dx1),
              (dy2, dy1),
@@ -118,17 +118,21 @@ def _solve_with_discretization(wire, points, dl):
     return b
 
 
-def solve(wire, points, dl=None):
+def solve(wires, points):
     """
     Calculate the resultant magnetic field due to an arbitrary wire object, for a given set of points.
 
     Assume that if `dl` isn't supplied, no discretization is required.
     """
-    match dl:
-        case None:
-            b = _solve_without_discretization(wire, points)
-        case _:
-            b = _solve_with_discretization(wire, points, dl)
+    # Generate an empty variable for the magnetic field
+    b = zeros((len(points[0]), 3), dtype=complex_)
+
+    for wire in wires.wires:
+        match wire.shape:
+            case "circle":
+                b += _solve_without_discretization(wire, points)
+            case "square":
+                b += _solve_with_discretization(wire, points)
 
     return b
 

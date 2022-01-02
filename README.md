@@ -30,6 +30,7 @@ mit_project
             |    circular_loop_validation.py
             |    square_loop_validation.py
 ```
+
 - [x] Implement a smarter discretization than taking the midpoints of each discretized segment. (Simpson's Rule?)
   - **Not implemented.** Currently not seen as necessary given the sufficient accuracy of the solver using the midpoint rule. 
 - [x] Write a configparser to parse a "parameters.txt" or "config.txt" file. Code should then accept some parameters for square/circular loops etc. and create the requisite Wire objects; performing Biot-Savart calculations for a given set of points. 

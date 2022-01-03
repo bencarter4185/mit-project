@@ -5,7 +5,7 @@ Library file for wire shapes for Biot-Savart solver.
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 from numpy import sqrt, cos, sin, arccos, linspace, zeros, array,\
-    concatenate, append, cross, matmul, dot, pi, deg2rad
+    concatenate, append, cross, matmul, dot, pi, arccos, arctan2, ptp
 
 
 class Wires:
@@ -18,7 +18,7 @@ class Wires:
     def __init__(self):
         self.wires = []
 
-    def plot_wires(self, xlim=None, ylim=None, zlim=None):
+    def plot_wires(self, xlim=None, ylim=None, zlim=None, axes_equal=False):
         """
         Plots all wire objects on the same axis.
         """
@@ -26,7 +26,7 @@ class Wires:
         ax = p3.Axes3D(fig)
 
         for wire in self.wires:
-            ax = wire.plotme(ax)
+            ax = wire.plotme(ax, axes_equal=axes_equal)
 
         if xlim is not None:
             ax.axes.set_xlim3d(left=xlim[0], right=xlim[1])
@@ -36,6 +36,9 @@ class Wires:
 
         if zlim is not None:
             ax.axes.set_zlim3d(bottom=zlim[0], top=zlim[1])
+
+        if axes_equal == True:
+            ax.set_box_aspect((1, 1, 1))  # aspect ratio is 1:1:1 in data space
 
         plt.show()
 
@@ -106,12 +109,12 @@ class Wire:
         """
         self.n = int(n)
 
-    def _gen_r_matrix(self, orientation):
+    def _gen_r_matrix(self, phi):
         """
         Generates the rotation matrix for a given combination of theta and phi.
         """
-        # Unpack orientation angles theta and phi
-        theta, phi = orientation[0], orientation[1]
+        # Set theta to 0
+        theta = 0
 
         # Unit vector of an x-y plane
         v = array([0, 0, 1])
@@ -150,43 +153,108 @@ class Wire:
         """
         return sqrt(vec.dot(vec))
 
-    def _reorient_loop(self, orientation, centre):
+
+    def _spherical_to_cartesian(self, point):
         """
-        Reorients the current loop based upon the angles (theta, phi)
-        Works for both square and circular current loops.
+        Return the spherical point in cartesian coordinates, assuming a right-handed coordinate system.
         """
+        # Unpack point
+        r = point[0]
+        theta = point[1]
+        phi = point[2]
 
-        # Unpack orientation angles theta and phi
-        theta, phi = orientation[0], orientation[1]
+        x = r * cos(theta) * sin(phi)
+        y = r * sin(theta) * sin(phi)
+        z = r * cos(phi)
 
-        # Generate empty variable for rotation matrix(/matrices)
-        r_matrix = []
+        return array([x, y, z])
 
-        # Failsafe: generating a rotation matrix for phi = 0 will create NaNs because it takes the cross product of
-        # two parallel vectors. Instead, if phi == 0 do two rotations.
+
+    def _cartesian_to_spherical(self, point):
+        """
+        Return the cartesian point in spherical coordinates, asssuming a right-handed coordinate system.
+        """
+        # Unpack point
+        x = point[0]
+        y = point[1]
+        z = point[2]
+
+        r = sqrt(x**2 + y**2 + z**2)
+        theta = arctan2(y, x)
+        phi = arccos(z/r)
+
+        return array([r, theta, phi])
+
+
+    def _reorient_theta_translate(self, theta, centre):
+        """
+        Reorients the current loop in theta and translates to new centre.
+        """
+        # Iterate through each point in `coordinates` (x, y, z)
+        for i in range(len(self.coordinates[0])):
+            # Get the point to be reoriented
+            point = array([self.coordinates[0][i], self.coordinates[1][i], self.coordinates[2][i]])
+
+            # Convert the point to spherical coordinates
+            point_spherical = self._cartesian_to_spherical(point)
+
+            # Add theta
+            point_spherical[1] += theta
+
+            # Convert back to cartesian coordinates
+            point = self._spherical_to_cartesian(point_spherical)
+
+            # Save the new reoriented point
+            self.coordinates[0][i] = point[0] + centre[0]  # x
+            self.coordinates[1][i] = point[1] + centre[1]  # y
+            self.coordinates[2][i] = point[2] + centre[2]  # z
+
+
+    def _reorient_phi(self, phi):
+        """
+        Reorients the current loop in phi.
+        """
+        # Failsafe: Code will get confused if we attempt to reorient by phi = 0. If we attempt to, return
         if phi == 0:
-            # Do two rotations, each of phi = pi so that the net change in phi is 0.
-            r_matrix.append(self._gen_r_matrix(array([theta, pi])))
-            r_matrix.append(self._gen_r_matrix(array([0, pi])))
-            print(f"{self.name}: rotating twice as phi is zero")
-        else:
-            # Do one rotation as expected
-            r_matrix.append(self._gen_r_matrix(orientation))
-            print(f"{self.name}: rotating once as phi is nonzero")
+            return
 
+        # Generate rotation matrix
+        r = self._gen_r_matrix(phi)
+        
         # Iterate through each point in `coordinates` (x, y, z)
         for i in range(len(self.coordinates[0])):
             # Get the point to be reoriented
             point = array([self.coordinates[0][i], self.coordinates[1][i], self.coordinates[2][i]])
 
             # Iterate through the r_matrix and reorient
-            for r in r_matrix:
-                point = matmul(r, point)
+            point = matmul(r, point)
 
             # Save the new reoriented point
-            self.coordinates[0][i] = point[0] + centre[0]  # x
-            self.coordinates[1][i] = point[1] + centre[1]  # y
-            self.coordinates[2][i] = point[2] + centre[2]  # z
+            self.coordinates[0][i] = point[0]  # x
+            self.coordinates[1][i] = point[1]  # y
+            self.coordinates[2][i] = point[2]  # z
+
+
+
+    def _reorient_loop(self, orientation, centre):
+        """
+        Reorients the current loop based upon the angles (theta, phi)
+        Works for both square and circular current loops.
+
+        Order of operation:
+            - generate r_matrix
+            - reorient in phi, generating rotation matrix
+            - convert to spherical coordinates, reorient in theta, and translate to new centre
+            - translate to new centre
+        """
+        # Unpack orientation angles theta and phi
+        theta, phi = orientation[0], orientation[1]
+
+        # Reorient in phi
+        self._reorient_phi(phi)
+
+        # Reorient in theta
+        self._reorient_theta_translate(theta, centre)
 
     def circular_loop(self, params):
         """
@@ -345,7 +413,7 @@ class Wire:
 
         return [x, y, z]
 
-    def plotme(self, ax=None):
+    def plotme(self, ax=None, axes_equal=False):
         '''Plots itself. Optional axis argument, otherwise new axes are created
         inactive until ShowPlots is called'''
 

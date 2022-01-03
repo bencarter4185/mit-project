@@ -1,0 +1,184 @@
+{
+    "coils": [
+        {
+        "name": "coil1",
+        "shape": "square",
+        "centre": {
+            "x": "1",
+            "y": "0",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "0",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    },
+    {
+        "name": "coil2",
+        "shape": "square",
+        "centre": {
+            "x": "sqrt(2)/2",
+            "y": "sqrt(2)/2",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "pi/4",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    },
+    {
+        "name": "coil3",
+        "shape": "square",
+        "centre": {
+            "x": "0",
+            "y": "1",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "pi/2",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    },
+    {
+        "name": "coil4",
+        "shape": "square",
+        "centre": {
+            "x": "-sqrt(2)/2",
+            "y": "sqrt(2)/2",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "3*pi/4",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    },
+    {
+        "name": "coil5",
+        "shape": "square",
+        "centre": {
+            "x": "-1",
+            "y": "0",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "pi",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    },
+    {
+        "name": "coil6",
+        "shape": "square",
+        "centre": {
+            "x": "-sqrt(2)/2",
+            "y": "-sqrt(2)/2",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "5*pi/4",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    },
+    {
+        "name": "coil7",
+        "shape": "square",
+        "centre": {
+            "x": "0",
+            "y": "-1",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "3*pi/2",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    },{
+        "name": "coil8",
+        "shape": "square",
+        "centre": {
+            "x": "sqrt(2)/2",
+            "y": "-sqrt(2)/2",
+            "z": "0"
+        },
+        "side length": "0.5",
+        "discretization length": "0.1",
+        "number of loops": "1",
+        "orientation": {
+            "theta": "7*pi/4",
+            "phi": "pi/2",
+            "angle unit": "radians"
+        },
+        "current": {
+            "modulus": "1",
+            "phase": "0",
+            "angle unit": "radians"
+        }
+    }],
+    "actions": [{
+        "name": "plot coils",
+        "execute": "true",
+        "zlim": ["-1.2", "1.2"],
+        "axes equal": "True"
+    }]
+}

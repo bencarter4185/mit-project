@@ -1,41 +1,46 @@
 {
     "coils": [
         {
-        "name": "coil2",
+        "name": "coil1",
         "shape": "square",
         "centre": {
-            "x": 0,
-            "y": 0,
-            "z": 0
+            "x": "0",
+            "y": "0",
+            "z": "0"
         },
-        "side length": 2,
-        "discretization length": 0.1,
-        "number of loops": 1,
+        "side length": "2",
+        "discretization length": "0.1",
+        "number of loops": "1",
         "orientation": {
-            "theta": 0,
-            "phi": 0,
+            "theta": "0",
+            "phi": "0",
             "angle unit": "degrees"
         },
         "current": {
-            "modulus": 1,
-            "phase": 0,
+            "modulus": "1",
+            "phase": "0",
             "angle unit": "degrees"
         }
     }],
-    "actions": {
-        "calculate magnetic field": {
-            "along": "line",
-            "start point" : {
-                "x": 0,
-                "y": 0,
-                "z": 0.1
-            },
-            "end point": {
-                "x": 0,
-                "y": 0,
-                "z": 10
-            },
-            "number of points": 100
-        }
-    }
+    "actions": [
+    {
+        "name": "validate magnetic field",
+        "execute": "true",
+        "shape": "square",
+        "start point": {
+            "x": "0",
+            "y": "0",
+            "z": "0.1"
+        },
+        "end point": {
+            "x": "0",
+            "y": "0",
+            "z": "10"
+        },
+        "number of points": "100"
+    },
+    {
+        "name": "plot coils",
+        "execute": "false"
+    }]
 }

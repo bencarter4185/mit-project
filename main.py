@@ -3,7 +3,7 @@ Writing a biot-savart solver from scratch
 """
 import ast
 import sys
-from modules.load_json import parse_json
+from modules.parse_json import parse_json
 from modules.bs_wires import Wires
 
 
@@ -38,10 +38,9 @@ def main():
         wires.new_wire(coil)
     wires.print_wires_with_properties()
 
-    for action in actions:
-        print(action)
-
-    wires.plot_wires()
+    # Check if `plot coils` is given as an action. If so, do it
+    if any("plot coils" in action for action in actions):
+        wires.plot_wires()
 
 
 if __name__ == '__main__':

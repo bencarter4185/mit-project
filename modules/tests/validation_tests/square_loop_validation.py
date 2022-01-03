@@ -35,7 +35,7 @@ def main(timing=False):
     # Internal imports
     from bs_wires import Wires
     from bs_solver import solve, b_abs
-    from load_json import parse_json
+    from modules.parse_json import parse_json
 
     # Hard-code the json_path for sake of ease in this case
     json_path = "./modules/tests/validation_tests/params/square_loop_validation.json"

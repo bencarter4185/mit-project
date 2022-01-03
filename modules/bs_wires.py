@@ -18,7 +18,7 @@ class Wires:
     def __init__(self):
         self.wires = []
 
-    def plot_wires(self):
+    def plot_wires(self, xlim=None, ylim=None, zlim=None):
         """
         Plots all wire objects on the same axis.
         """
@@ -27,6 +27,15 @@ class Wires:
 
         for wire in self.wires:
             ax = wire.plotme(ax)
+
+        if xlim is not None:
+            ax.axes.set_xlim3d(left=xlim[0], right=xlim[1])
+
+        if ylim is not None:
+            ax.axes.set_ylim3d(bottom=ylim[0], top=ylim[1])
+
+        if zlim is not None:
+            ax.axes.set_zlim3d(bottom=zlim[0], top=zlim[1])
 
         plt.show()
 
@@ -40,135 +49,18 @@ class Wires:
                 print(f"{property}: {properties[property]}")
             print()  # newline as separator
 
-    def _parse_angular_quantity(self, angle_param, unit_param=None):
-        """
-        Parses angular quantity and returns angle in radians.
-        Assumes units provided are given in multiples of pi radians unless specified as degrees.
-        """
-        match unit_param:
-            case ("degrees" | "degree" | "deg"):
-                angle = deg2rad(eval(angle_param))
-            case _:
-                angle = eval(angle_param)
-        return angle
-
-    def _gen_circular_params(self, wire_params):
-        """
-        Unpack the params for the circular loop and return.
-        """
-        # Parse angular quantities in `wire_params`. If angular unit not given,
-        # catch the KeyError and assume the angle is given in radians.
-        try:
-            # Parse angular quantities in `wire_params`
-            theta = self._parse_angular_quantity(
-                angle_param=wire_params["orientation"]["theta"],
-                unit_param=wire_params["orientation"]["angle unit"]
-            )
-        except KeyError:
-            theta = self._parse_angular_quantity(angle_param=wire_params["orientation"]["theta"])
-
-        try:
-            # Parse angular quantities in `wire_params`
-            phi = self._parse_angular_quantity(
-                angle_param=wire_params["orientation"]["phi"],
-                unit_param=wire_params["orientation"]["angle unit"]
-            )
-        except KeyError:
-            phi = self._parse_angular_quantity(angle_param=wire_params["orientation"]["theta"])
-
-        try:
-            # Parse angular quantities in `wire_params`
-            phase = self._parse_angular_quantity(
-                angle_param=wire_params["current"]["phase"],
-                unit_param=wire_params["current"]["angle unit"]
-            )
-        except KeyError:
-            phase = self._parse_angular_quantity(angle_param=wire_params["current"]["phase"])
-
-        params = {
-            "name": wire_params["name"],
-            "shape": wire_params["shape"],
-            "centre": array([
-                wire_params["centre"]["x"],
-                wire_params["centre"]["y"],
-                wire_params["centre"]["z"],
-            ]),  # (x, y, z)
-            "radius": wire_params["radius"],
-            "np": wire_params["number of points"],
-            "n": wire_params["number of loops"],
-            "orientation": array([theta, phi]),
-            "current": complex(wire_params["current"]["modulus"], phase)
-        }
-        return params
-
-    def _gen_square_params(self, wire_params):
-        """
-        Unpack the params for the square loop and return.
-        """
-        # Parse angular quantities in `wire_params`. If angular unit not given,
-        # catch the KeyError and assume the angle is given in radians.
-        try:
-            # Parse angular quantities in `wire_params`
-            theta = self._parse_angular_quantity(
-                angle_param=wire_params["orientation"]["theta"],
-                unit_param=wire_params["orientation"]["angle unit"]
-            )
-        except KeyError:
-            theta = self._parse_angular_quantity(angle_param=wire_params["orientation"]["theta"])
-
-        try:
-            # Parse angular quantities in `wire_params`
-            phi = self._parse_angular_quantity(
-                angle_param=wire_params["orientation"]["phi"],
-                unit_param=wire_params["orientation"]["angle unit"]
-            )
-        except KeyError:
-            phi = self._parse_angular_quantity(angle_param=wire_params["orientation"]["theta"])
-
-        try:
-            # Parse angular quantities in `wire_params`
-            phase = self._parse_angular_quantity(
-                angle_param=wire_params["current"]["phase"],
-                unit_param=wire_params["current"]["angle unit"]
-            )
-        except KeyError:
-            phase = self._parse_angular_quantity(angle_param=wire_params["current"]["phase"])
-
-        params = {
-            "name": wire_params["name"],
-            "shape": wire_params["shape"],
-            "centre": array([
-                wire_params["centre"]["x"],
-                wire_params["centre"]["y"],
-                wire_params["centre"]["z"],
-            ]),  # (x, y, z)
-            "length": wire_params["side length"],
-            "dl": wire_params["discretization length"],
-            "n": wire_params["number of loops"],
-            "orientation": array([theta, phi]),
-            "current": complex(wire_params["current"]["modulus"], phase)
-        }
-        return params
-
-    def new_wire(self, wire_params):
+    def new_wire(self, params):
         """
         Create a new Wire object and add to self.wires
         """
         new_wire = Wire()
 
-        # Parse the wire_params object to extract the relevant parameters
-
         # Pattern match against wire_params to check what shape of wire we're creating
-        match wire_params["shape"]:
+        match params["shape"]:
             case "circle":
-                params = self._gen_circular_params(wire_params)
                 new_wire.circular_loop(params)
             case "square":
-                params = self._gen_square_params(wire_params)
                 new_wire.square_loop(params)
-            case _:
-                shape = wire_params["shape"]
-                raise Exception(f"ERROR: Code currently only supports circular and square current loops. You provided: \"{shape}\". Please specify either \"circle\" or \"square\".")  # noqa: E501
 
         # Now the wire is created, append it to our Wires object
         self.wires.append(new_wire)
@@ -258,7 +150,7 @@ class Wire:
         """
         return sqrt(vec.dot(vec))
 
-    def _reorient_loop(self, orientation):
+    def _reorient_loop(self, orientation, centre):
         """
         Reorients the current loop based upon the angles (theta, phi)
         Works for both square and circular current loops.
@@ -272,13 +164,15 @@ class Wire:
 
         # Failsafe: generating a rotation matrix for phi = 0 will create NaNs because it takes the cross product of
         # two parallel vectors. Instead, if phi == 0 do two rotations.
-        if phi != 0:
-            # Do one rotation as expected
-            r_matrix.append(self._gen_r_matrix(orientation))
-        else:
+        if phi == 0:
             # Do two rotations, each of phi = pi so that the net change in phi is 0.
             r_matrix.append(self._gen_r_matrix(array([theta, pi])))
             r_matrix.append(self._gen_r_matrix(array([0, pi])))
+            print(f"{self.name}: rotating twice as phi is zero")
+        else:
+            # Do one rotation as expected
+            r_matrix.append(self._gen_r_matrix(orientation))
+            print(f"{self.name}: rotating once as phi is nonzero")
 
         # Iterate through each point in `coordinates` (x, y, z)
         for i in range(len(self.coordinates[0])):
@@ -290,9 +184,9 @@ class Wire:
                 point = matmul(r, point)
 
             # Save the new reoriented point
-            self.coordinates[0][i] = point[0]
-            self.coordinates[1][i] = point[1]
-            self.coordinates[2][i] = point[2]
+            self.coordinates[0][i] = point[0] + centre[0]  # x
+            self.coordinates[1][i] = point[1] + centre[1]  # y
+            self.coordinates[2][i] = point[2] + centre[2]  # z
 
     def circular_loop(self, params):
         """
@@ -327,17 +221,17 @@ class Wire:
         # Set number of points current loop is defined by
         self.np = params["np"]
 
-        # Generate a circular loop in the x-y plane: to be rotated later
+        # Generate a circular loop in the x-y plane centred on (0, 0, 0): to be rotated and translated later
         t = linspace(0, 2*pi, self.np)
 
-        x = params["centre"][0] + params["radius"] * sin(t)
-        y = params["centre"][1] + params["radius"] * cos(t)
+        x = params["radius"] * sin(t)
+        y = params["radius"] * cos(t)
         z = zeros(self.np)
 
         self.coordinates = [x, y, z]
 
         # Now reorient the wire according to `orientation`
-        self._reorient_loop(params["orientation"])
+        self._reorient_loop(params["orientation"], params["centre"])
 
     def square_loop(self, params):
         """
@@ -371,12 +265,8 @@ class Wire:
         # Set the discretization length
         self.dl = params["dl"]
 
-        # Generate un-rotated origin
-        origin = array([
-            params["centre"][0] + params["length"]/2,
-            params["centre"][1] - params["length"]/2,
-            params["centre"][2]]
-            )
+        # Generate un-rotated origin based on a centre of (0, 0, 0)
+        origin = array([params["length"]/2, -params["length"]/2, 0])
 
         # Add the 4 wire elements for a square loop in the x-y plane
         self.add_wire_element(pi/2, pi/2, params["length"], origin)
@@ -385,7 +275,7 @@ class Wire:
         self.add_wire_element(0, pi/2, params["length"])
 
         # Reorient the loop according to orientation
-        self._reorient_loop(params["orientation"])
+        self._reorient_loop(params["orientation"], params["centre"])
 
     def add_wire_element(self, theta, phi, length, origin=None):
         """

@@ -6,12 +6,17 @@ Circular loop
 # Internal Imports
 from import_above import allow_above_imports
 # External imports
-from numpy import array, linspace
+from numpy import array, linspace, sqrt, sum, floor, log10
 from scipy.constants import mu_0 as mu
 import matplotlib.pyplot as plt
+from timeit import timeit  # noqa: F401
 
 
-def main():
+def round_sig(x, sig=2):
+    return round(x, sig-int(floor(log10(abs(x))))-1)
+
+
+def main(timing=False):
     """
     circular_loop_validation.py
 
@@ -52,30 +57,52 @@ def main():
     b = solve(wires, points)
     b_mag = b_abs(b)
 
-    # Extract wire properties for ease of analytical solution calculation
-    test_loop = wires.wires[0]
-    current = test_loop.current
-    radius = test_loop.radius
+    # Do plots and comparison if not timing execution
+    if timing is False:
+        # Extract wire properties for ease of analytical solution calculation
+        test_loop = wires.wires[0]
+        current = test_loop.current
+        radius = test_loop.radius
+        np = test_loop.np
 
-    # Calculate analytical solution of magnetic field due to current loop
-    b_analytical = abs(mu*current*radius**2/(2*(zs**2+radius**2)**(3.0/2.0)))
+        # Calculate analytical solution of magnetic field due to current loop
+        b_analytical = abs(mu*current*radius**2/(2*(zs**2+radius**2)**(3.0/2.0)))
 
-    # Plot graph of results
-    plt.style.use("seaborn")
-    _, ax = plt.subplots(ncols=1, nrows=1)
+        # Plot graph of results
+        plt.style.use("seaborn")
+        _, ax = plt.subplots(ncols=1, nrows=1)
 
-    ax.plot(zs, b_mag, label="Numerical solution")
-    ax.scatter(zs, b_analytical, label="Analytical Solution")
+        ax.plot(zs, b_mag, label="Numerical solution")
+        ax.scatter(zs, b_analytical, label="Analytical Solution")
 
-    ax.legend()
+        ax.legend()
 
-    ax.set_xlabel(r"$z$ (m)")
-    ax.set_ylabel(r"$B$ (T)")
-    ax.set_title("Circular Loop Validation")
+        ax.set_xlabel(r"$z$ (m)")
+        ax.set_ylabel(r"$B$ (T)")
+        ax.set_title(f"Circular Loop Validation, Number of Points = {np}")
 
-    plt.show()
+        # Calculate root mean square error, RMSE
+        rmse = sqrt(sum((b_analytical-b_mag)**2.0)/len(b_mag))
+        print(f"Root Mean Square Error = {rmse}")
+
+        # Add RMSE to plot
+        ax.text(0.8, 0.8, f"RMSE = {round_sig(rmse, sig = 3)} T", horizontalalignment='center',
+                verticalalignment='center', transform=ax.transAxes, fontsize=16)
+
+        # Plot graph if not timing execution
+        plt.show()
 
 
 if __name__ == "__main__":
     allow_above_imports()
+
+    # # Time how long it takes to execute the whole simulation. Turn this off later.
+    # repeats = 100
+    # execution_time = timeit(lambda: main(True), number=repeats)
+    # avg_time = execution_time/repeats
+    # print("Circular Loop:")
+    # print(f"total runtime over {repeats} repeats = {execution_time:.3f} seconds")
+    # print(f"average runtime = {avg_time:.3f} seconds\n")
+
+    # Comment this out if I want to time how long the code takes to execute
     main()

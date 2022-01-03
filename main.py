@@ -26,7 +26,6 @@ def main():
     """
     Testing how we extract `what to do` from the JSON file.
     """
-
     # Parse args and kwargs and store args[1] as the filepath for the `params.json` file.
     args, _ = parse_args(sys.argv)
     json_path = args[0][1]

@@ -177,6 +177,7 @@ class Wire:
         self.current = complex(1, 0)
         self.coordinates = []
         self.n = 1
+        self.np = None
         self.dl = None
         self.radius = None
         self.length = None
@@ -309,12 +310,15 @@ class Wire:
         # Set number of turns of current loop
         self.n = params["n"]
 
+        # Set number of points current loop is defined by
+        self.np = params["np"]
+
         # Generate a circular loop in the x-y plane: to be rotated later
-        t = linspace(0, 2*pi, params["np"])
+        t = linspace(0, 2*pi, self.np)
 
         x = params["centre"][0] + params["radius"] * sin(t)
         y = params["centre"][1] + params["radius"] * cos(t)
-        z = zeros(params["np"])
+        z = zeros(self.np)
 
         self.coordinates = [x, y, z]
 

@@ -2,6 +2,8 @@
 Library file for wire shapes for Biot-Savart solver.
 """
 
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as p3
 from numpy import sqrt, cos, sin, arccos, linspace, zeros, array,\
     concatenate, append, cross, matmul, dot, pi, deg2rad
 
@@ -15,6 +17,18 @@ class Wires:
     # Create an empty list by default
     def __init__(self):
         self.wires = []
+
+    def plot_wires(self):
+        """
+        Plots all wire objects on the same axis.
+        """
+        fig = plt.figure(None)
+        ax = p3.Axes3D(fig)
+
+        for wire in self.wires:
+            ax = wire.plotme(ax)
+
+        plt.show()
 
     def print_wires_with_properties(self):
         """
@@ -444,24 +458,16 @@ class Wire:
     def plotme(self, ax=None):
         '''Plots itself. Optional axis argument, otherwise new axes are created
         inactive until ShowPlots is called'''
-        import pylab as p
-        import mpl_toolkits.mplot3d.axes3d as p3
 
         X = self.coordinates[0]
         Y = self.coordinates[1]
         Z = self.coordinates[2]
 
-        if ax is None:
-            fig = p.figure(None)
-            ax1 = p3.Axes3D(fig)
-        else:
-            ax1 = ax
+        ax.plot(X, Y, Z)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
 
-        ax1.plot(X, Y, Z)
-        ax1.set_xlabel('X')
-        ax1.set_ylabel('Y')
-        ax1.set_zlabel('Z')
+        plt.draw()
 
-        p.draw()
-
-        return ax1
+        return ax

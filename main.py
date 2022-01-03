@@ -41,6 +41,8 @@ def main():
     for action in actions:
         print(action)
 
+    wires.plot_wires()
+
 
 if __name__ == '__main__':
     main()

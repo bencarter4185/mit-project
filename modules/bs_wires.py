@@ -47,9 +47,9 @@ class Wires:
         """
         match unit_param:
             case ("degrees" | "degree" | "deg"):
-                angle = deg2rad(angle_param)
+                angle = deg2rad(eval(angle_param))
             case _:
-                angle = pi * angle_param
+                angle = eval(angle_param)
         return angle
 
     def _gen_circular_params(self, wire_params):

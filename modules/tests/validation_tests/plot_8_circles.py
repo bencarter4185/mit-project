@@ -2,7 +2,6 @@
 Test script to plot 8 coils arranged in a circle around the origin.
 """
 # Internal Imports
-from matplotlib.pyplot import plot
 from import_above import allow_above_imports
 
 

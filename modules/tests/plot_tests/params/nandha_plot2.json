@@ -1,0 +1,61 @@
+{
+    "coils": [
+        {
+            "name": "coil1",
+            "shape": "square",
+            "centre": {
+                "x": "3",
+                "y": "0",
+                "z": "0"
+            },
+            "side length": "6",
+            "discretization length": "0.1",
+            "number of loops": "1",
+            "orientation": {
+                "theta": "pi",
+                "phi": "pi/2",
+                "angle unit": "radians"
+            },
+            "current": {
+                "modulus": "1",
+                "phase": "0",
+                "angle unit": "radians"
+            }
+        },{
+            "name": "coil3",
+            "shape": "square",
+            "centre": {
+                "x": "-3",
+                "y": "0",
+                "z": "0"
+            },
+            "side length": "6",
+            "discretization length": "0.1",
+            "number of loops": "1",
+            "orientation": {
+                "theta": "0",
+                "phi": "pi/2",
+                "angle unit": "radians"
+            },
+            "current": {
+                "modulus": "1",
+                "phase": "0",
+                "angle unit": "radians"
+            }
+        }
+    ],
+    "actions": [
+        {
+            "name": "plot coils",
+            "execute": "true",
+            "axes equal": "true"
+        },{
+            "name": "plot slice xy",
+            "execute": "true",
+            "axes equal": "true",
+            "xlim": ["-3", "3"],
+            "ylim": ["-3", "3"],
+            "number of points": "10"
+        }
+    ]
+}

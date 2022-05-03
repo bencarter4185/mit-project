@@ -5,7 +5,7 @@ Library file for wire shapes for Biot-Savart solver.
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 from numpy import sqrt, cos, sin, arccos, linspace, zeros, array,\
-    concatenate, append, cross, matmul, dot, pi, arccos, arctan2, ptp
+    concatenate, append, cross, matmul, dot, pi, arccos, arctan2, zeros_like
 
 
 class Wires:
@@ -40,7 +40,7 @@ class Wires:
         if axes_equal == True:
             ax.set_box_aspect((1, 1, 1))  # aspect ratio is 1:1:1 in data space
 
-        plt.show()
+        # plt.show()
 
     def print_wires_with_properties(self):
         """

@@ -136,6 +136,8 @@ def _parse_coils(coils):
 
     return parsed_coils
 
+
+
 def _parse_boolean(action, action_name):
     """
     Evaluates a parameter to a boolean True or False.
@@ -196,6 +198,19 @@ def _parse_plot(action):
     return parsed_action
 
 
+def _parse_slice_xy(action):
+    parsed_action = {
+        "name": action["name"],
+        "execute": _parse_boolean(action, "execute"),
+        "xlim": _parse_lim(action, "xlim"),
+        "ylim": _parse_lim(action, "ylim"),
+        "axes_equal": _parse_boolean(action, "axes equal"),
+        "np": eval(action["number of points"])
+    }
+
+    return parsed_action
+
+
 def _parse_validation(action):
     """
     Parse `validate magnetic field` action and convert to pythonic data types.
@@ -220,7 +235,7 @@ def _parse_actions(actions):
 
     for action in actions:
         # If action's execute parameter is set to false; skip
-        if _parse_boolean(action, "execute") == False:
+        if _parse_boolean(action, "execute") is False:
             continue
 
         # Work out what we're trying to parse
@@ -229,7 +244,9 @@ def _parse_actions(actions):
                 parsed_action = _parse_validation(action)
             case "plot coils":
                 parsed_action = _parse_plot(action)
-        
+            case "plot slice xy":
+                parsed_action = _parse_slice_xy(action)
+     
         parsed_actions.append(parsed_action)
 
     return parsed_actions

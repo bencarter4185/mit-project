@@ -89,7 +89,11 @@ def _solve_with_discretization(wire, points):
     current = complex(wire.current.real * wire.n, wire.current.imag)
 
     # Generate an empty variable for the magnetic field
-    b = zeros((len(points[0]), 3), dtype=complex_)
+    try:
+        length = len(points[0])
+    except TypeError:
+        length = 1
+    b = zeros((length, 3), dtype=complex_)
 
     # Iterate through every segment of wire
     for ((x2, x1),
@@ -110,10 +114,14 @@ def _solve_with_discretization(wire, points):
                                 pairwise(segments[2])):
             segment_chunk = array([array([dx1, dx2]), array([dy1, dy2]), array([dz1, dz2])])
             # Iterate through every point in question and solve
-            for j in range(len(points[0])):
-                # Generate coordinates of point
-                point = array([points[0][j], points[1][j], points[2][j]])
-                b[j] += _solve_segment(segment_chunk, point, current)
+            if length != 1:
+                for j in range(length):
+                    # Generate coordinates of point
+                    point = array([points[0][j], points[1][j], points[2][j]])
+                    b[j] += _solve_segment(segment_chunk, point, current)
+            else:
+                point = array([points[0], points[1], points[2]])
+                b += _solve_segment(segment_chunk, point, current)
 
     return b
 
@@ -125,7 +133,11 @@ def solve(wires, points):
     Assume that if `dl` isn't supplied, no discretization is required.
     """
     # Generate an empty variable for the magnetic field
-    b = zeros((len(points[0]), 3), dtype=complex_)
+    try:
+        length = len(points[0])
+    except TypeError:
+        length = 1
+    b = zeros((length, 3), dtype=complex_)
 
     for wire in wires.wires:
         match wire.shape:
@@ -136,6 +148,8 @@ def solve(wires, points):
 
     return b
 
+def b_abs_new(b):
+    b_abs
 
 def b_abs(b):
     """
